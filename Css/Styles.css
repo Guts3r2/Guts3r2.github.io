@@ -1,0 +1,44 @@
+*{
+    color:brown;
+}
+ 
+ 
+ p,span{
+    color:forestgreen;
+   }
+    
+ 
+ /**asi se comenta paapaaaaa*/
+ h2
+{
+    font-family: 'Kanit', sans-serif;
+    border: 1px solid blue;
+    padding: 5px 15px 25px 35px;
+    margin-top: 30px;
+    margin-bottom: 40px;
+    margin-left: 50px;
+    margin-right: 10px;
+    font-weight: bold;
+    color: blueviolet;
+}
+section{
+    width: 300px;
+    border: 15px solid green;
+    padding: 50px;
+    margin: 20px;
+  }
+ #id_de_span {
+    font-size: 40px;
+    color: hotpink;
+ }
+ .clase_de_p{
+    font-weight: bold;
+    color: darkorange;
+ }
+ section h2 {
+    font-weight: 100px;
+    color: greenyellow;
+ }
+ body{
+    background-color:black;
+ }

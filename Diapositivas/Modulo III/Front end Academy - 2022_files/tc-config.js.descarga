@@ -1,0 +1,20 @@
+/* Tin Can configuration */
+
+//
+// ActivityID that is sent for the statement's object
+//
+TC_COURSE_ID = "http://gUnrZkmDjnlQVifiz7ybERabtq9VZ3wC_rise"
+
+//
+// CourseName for the activity
+//
+TC_COURSE_NAME = {
+  "en-US": "Primeros pasos en el desarrollo front-end"
+};
+
+//
+// CourseDesc for the activity
+//
+TC_COURSE_DESC = {
+  "en-US": "&lt;p&gt;&amp;iexcl;Te damos la bienvenida! En este curso vas a obtener los conocimientos necesarios para dar tus primeros pasos en el desarrollo &lt;em&gt;f&lt;/em&gt;&lt;em&gt;ront-end&lt;/em&gt;. En una primera parte, acceder&amp;aacute;s al mundo del desarrollo web, para luego adentrarte en las l&amp;oacute;gicas de la programaci&amp;oacute;n. Finalmente, realizar&amp;aacute;s un proyecto final integrador en el que pondr&amp;aacute;s en pr&amp;aacute;ctica lo aprendido.&amp;nbsp; &amp;iexcl;Adelante!&lt;/p&gt;"
+};

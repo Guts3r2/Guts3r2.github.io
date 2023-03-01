@@ -1,0 +1,31 @@
+; (function (_window) {
+    function sendData(data) {
+        if (_window.self !== _window.top) {
+            _window.parent.postMessage(data, '*')
+        }
+    }
+
+    _window.document.addEventListener('click', e => {
+        const closestLink = e.target.closest('a')
+        if (closestLink) {
+            checkRoboticsTask(e, closestLink)
+        }
+    })
+
+
+    function checkRoboticsTask(e, closestLink) {
+        if (!closestLink.href) return
+
+        const url = new URL(closestLink.href)
+
+        if (url.host.includes('robotica.ticmas')) {
+            e.preventDefault()
+            sendData({
+                type: 'go-to-assignments',
+                payload: {
+                    href: closestLink.href
+                }
+            })
+        }
+    }
+})(window)

@@ -1,0 +1,171 @@
+; (function (root) {
+  class CustomTinCan extends root.TinCan {
+
+    init(cfg) {
+      super.init(Object.assign(cfg, { recordStores: [{ endpoint: 'http://localhost' }] }))
+      this.LOCAL_STATES = {}
+      const urlParams = new URLSearchParams(window.location.search)
+
+      let resolve = null
+      this.resolvedState = new Promise((r) => { resolve = r })
+
+      if (window.self !== window.top && urlParams.has('track')) {
+        window.addEventListener('message', event => {
+          if (event.data.hasOwnProperty('states') && resolve) {
+            this.LOCAL_STATES = event.data.states
+            resolve()
+            resolve = null
+          }
+
+          if (event.data.hasOwnProperty('type') && event.data.type === 'statements') {
+            this.sendStatement(event.data.items)
+          }
+        })
+
+      } else {
+        resolve(this.LOCAL_STATES)
+        resolve = null
+      }
+    }
+
+    setState(key, val, cfg) {
+      const states = this.LOCAL_STATES
+      if (typeof cfg.contentType === 'undefined') {
+        cfg.contentType = 'application/octet-stream'
+      }
+
+      if (
+        typeof val === 'object' &&
+        root.TinCan.Utils.isApplicationJSON(cfg.contentType)
+      ) {
+        val = JSON.stringify(val)
+      }
+      states[key] = {
+        id: key,
+        contents: val
+      }
+
+      this.sendData({ type: 'states', items: states })
+    }
+
+    getState(key, cfg) {
+      if (typeof cfg.callback === "function") {
+        this.resolvedState.then(() => {
+          try {
+            let state = this.LOCAL_STATES[key]
+            if (state && key == 'bookmark' && root.courseData) {
+              const data = JSON.parse(atob((root.courseData)))
+              const lessons = data.course.lessons.map(e => e.id)
+              const lesson = state.contents.split('/').pop()
+              if (!lessons.includes(lesson)) {
+                throw Error(`Bad lesson: ${lesson}`)
+              }
+            }
+            cfg.callback(null, state)
+          } catch (err) {
+            console.error(err)
+            cfg.callback(null, {})
+          }
+        })
+        return
+      }
+
+      return { state: {} }
+    }
+
+    sendStatement(stmt, callback) {
+      const statement = this.wrapStatement(stmt)
+      this.sendData({ type: 'statements', items: statement })
+      if (typeof callback === 'function') {
+        callback()
+      }
+    }
+
+    sendData(data) {
+      if (window.self !== window.top) {
+        root.parent.postMessage(data, '*')
+      }
+    }
+
+    wrapStatement(stmt) {
+      const ids = stmt.object.id ? stmt.object.id.split('/') : []
+      let lesson, quiz
+
+      if(!ids[3]) {
+        const hashLesson = location.hash.match(/lessons\/([A-z0-9-_]*)/)
+        if(hashLesson) {
+          lesson = hashLesson[1]
+        }
+      } else {
+        lesson = ids[3]
+      }
+
+      quiz = ids[4]
+
+      stmt.type = 'http://adlnet.gov/expapi/activities/course'
+
+      if (lesson || quiz) {
+
+        if (!stmt.object.definition) {
+          stmt.object.definition = {}
+        }
+
+        if (!stmt.object.definition.extensions) {
+          stmt.object.definition.extensions = {}
+        }
+
+        if (lesson) {
+          stmt.object.definition.extensions['http://adlnet.gov/expapi/activities/lesson'] = lesson
+        }
+
+        if (quiz) {
+          stmt.object.definition.extensions['http://adlnet.gov/expapi/activities/quiz'] = quiz.split('_')[0]
+        }
+      }
+
+      if(stmt.context && stmt.context.contextActivities && stmt.context.contextActivities.parent) {
+        stmt.context.contextActivities.parent = stmt.context.contextActivities.parent.filter(e => e.id && e.id !== '')
+        if(stmt.context.contextActivities.parent.length == 0) {
+          delete stmt.context.contextActivities.parent
+        }
+      }
+
+      return stmt
+    }
+  }
+
+  root.TinCan = CustomTinCan
+  root.TinCan.Utils.convertMillisecondsToISO8601Duration = function (inputMilliseconds) {
+    var hours,
+      minutes,
+      seconds,
+      i_inputMilliseconds = parseInt(inputMilliseconds, 10),
+      i_inputCentiseconds,
+      inputIsNegative = "",
+      rtnStr = "";
+
+    i_inputCentiseconds = Math.round(i_inputMilliseconds / 10);
+
+    if (i_inputCentiseconds < 0) {
+      inputIsNegative = "-";
+      i_inputCentiseconds = i_inputCentiseconds * -1;
+    }
+
+    hours = parseInt(((i_inputCentiseconds) / 360000), 10);
+    minutes = parseInt((((i_inputCentiseconds) % 360000) / 6000), 10);
+    seconds = (((i_inputCentiseconds) % 360000) % 6000) / 100;
+
+    rtnStr = inputIsNegative + "PT";
+    if (hours > 0) {
+      rtnStr += hours + "H";
+    }
+
+    if (minutes > 0) {
+      rtnStr += minutes + "M";
+    }
+
+    rtnStr += seconds + "S";
+
+    return rtnStr;
+  }
+})(window);

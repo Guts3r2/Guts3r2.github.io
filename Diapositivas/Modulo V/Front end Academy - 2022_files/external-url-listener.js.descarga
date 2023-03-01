@@ -1,0 +1,47 @@
+;(function(_window) {
+  const urlParams = new URLSearchParams(_window.location.search)
+  const excludeDomains = ['http://robotica.ticmas']
+
+  function sendData(data) {
+    _window.parent.postMessage(data, '*')
+  }
+
+  function checkExternalLink(e, closestLink) {
+    const href = closestLink.attributes.href
+    if (href && href.value.startsWith('http')) {
+      e.preventDefault()
+      sendData({
+        type: 'external-link',
+        payload: {
+          href: href.value
+        }
+      })
+    }
+  }
+
+  function checkDownloadLink(e, closestLink) {
+    const target = closestLink.attributes.target
+    const download = closestLink.attributes.download
+    const href = closestLink.href
+    if (target && target.value === '_blank' && !!download) {
+      e.preventDefault()
+      sendData({
+        type: 'download-link',
+        payload: {
+          download: download.value,
+          href: href
+        }
+      })
+    }
+  }
+
+  _window.document.addEventListener('click', e => {
+    if (_window.self !== _window.top && urlParams.has('checkLinks')) {
+      const closestLink = e.target.closest('a')
+      if (closestLink && !excludeDomains.some(ed => closestLink.href.includes(ed))) {
+        checkExternalLink(e, closestLink)
+        checkDownloadLink(e, closestLink)
+      }
+    }
+  })
+})(window)
